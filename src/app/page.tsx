@@ -1,7 +1,10 @@
-"use client";
-
 import ThemeBuilder from "@/components/ThemeBuilder";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function Home() {
-  return <ThemeBuilder />;
+  return (
+    <ErrorBoundary>
+      <ThemeBuilder />
+    </ErrorBoundary>
+  );
 }

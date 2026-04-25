@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import JSZip from "jszip";
 import { DEFAULT_THEME, QlikTheme, themeToQlikJson, themeToCSS, THEME_PRESETS } from "@/types/theme";
 
 // ── Controls ─────────────────────────────────────────
@@ -500,6 +499,7 @@ export default function ThemeBuilder() {
   const exportZip = useCallback(async () => {
     setExporting(true);
     try {
+      const { default: JSZip } = await import("jszip");
       const zip = new JSZip();
       zip.file(`${theme.id}.json`, JSON.stringify(themeToQlikJson(theme), null, 2));
       zip.file(`${theme.id}.css`, themeToCSS(theme));
