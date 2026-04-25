@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import JSZip from "jszip";
 import { DEFAULT_THEME, QlikTheme, themeToQlikJson, themeToCSS, THEME_PRESETS } from "@/types/theme";
 
 // ── Controls ─────────────────────────────────────────
@@ -217,6 +218,79 @@ function DonutChart({
   );
 }
 
+// ── Data Table ────────────────────────────────────────
+
+function DataTable({
+  headers,
+  rows,
+  theme,
+}: {
+  headers: string[];
+  rows: (string | number)[][];
+  theme: QlikTheme;
+}) {
+  const padV = Math.min(Math.floor(theme.padding / 3), 7);
+  const padH = Math.min(Math.floor(theme.padding / 2), 10);
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          fontSize: theme.fontSize - 1,
+          fontFamily: theme.fontFamily,
+          color: theme.textColor,
+        }}
+      >
+        <thead>
+          <tr style={{ backgroundColor: `${theme.primaryColor}18` }}>
+            {headers.map((h) => (
+              <th
+                key={h}
+                style={{
+                  padding: `${padV}px ${padH}px`,
+                  textAlign: "left",
+                  borderBottom: `2px solid ${theme.primaryColor}`,
+                  fontWeight: 600,
+                  color: theme.primaryColor,
+                  whiteSpace: "nowrap",
+                  fontSize: theme.fontSize - 1,
+                }}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr
+              key={i}
+              style={{
+                backgroundColor: i % 2 === 0 ? "transparent" : `${theme.borderColor}40`,
+              }}
+            >
+              {row.map((cell, j) => (
+                <td
+                  key={j}
+                  style={{
+                    padding: `${padV}px ${padH}px`,
+                    borderBottom: `1px solid ${theme.borderColor}`,
+                    whiteSpace: "nowrap",
+                    fontWeight: j === 0 ? 500 : "normal",
+                  }}
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ── Tab data ──────────────────────────────────────────
 
 type TabKey = "Overview" | "Sales" | "Inventory" | "Customers";
@@ -232,6 +306,9 @@ interface TabContent {
   lineValues?: number[];
   lineLabels?: string[];
   lineTitle?: string;
+  tableHeaders: string[];
+  tableRows: (string | number)[][];
+  tableTitle: string;
 }
 
 const TAB_DATA: Record<TabKey, TabContent> = {
@@ -248,6 +325,13 @@ const TAB_DATA: Record<TabKey, TabContent> = {
     donutData: [40, 25, 20, 15],
     donutLabels: ["Products", "Services", "Licensing", "Other"],
     donutTitle: "Revenue Mix",
+    tableHeaders: ["Region", "Revenue", "Growth", "Orders", "Status"],
+    tableRows: [
+      ["EMEA", "€1.02M", "+14.2%", "4,210", "On Track"],
+      ["APAC", "€0.78M", "+19.5%", "3,120", "Ahead"],
+      ["Americas", "€0.60M", "+5.1%", "1,082", "Behind"],
+    ],
+    tableTitle: "Regional Summary",
   },
   Sales: {
     kpis: [
@@ -265,6 +349,13 @@ const TAB_DATA: Record<TabKey, TabContent> = {
     lineValues: [310, 420, 380, 510, 470, 620, 580, 710],
     lineLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
     lineTitle: "Cumulative Pipeline",
+    tableHeaders: ["Rep", "Quota", "Closed", "Attainment", "Stage"],
+    tableRows: [
+      ["A. Martin", "€500K", "€612K", "122%", "Exceeded"],
+      ["S. Chen", "€500K", "€478K", "95.6%", "On Track"],
+      ["L. Dubois", "€400K", "€291K", "72.8%", "At Risk"],
+    ],
+    tableTitle: "Top Sales Reps",
   },
   Inventory: {
     kpis: [
@@ -282,6 +373,13 @@ const TAB_DATA: Record<TabKey, TabContent> = {
     lineValues: [95, 88, 91, 84, 79, 86, 80, 75],
     lineLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
     lineTitle: "Fill Rate %",
+    tableHeaders: ["SKU", "Product", "Stock", "Reorder Pt", "Status"],
+    tableRows: [
+      ["EL-0042", "Monitor 27″", "14", "20", "Low Stock"],
+      ["AP-0118", "Jacket XL", "203", "50", "OK"],
+      ["FU-0031", "Desk Chair", "8", "15", "Low Stock"],
+    ],
+    tableTitle: "Critical Stock Items",
   },
   Customers: {
     kpis: [
@@ -299,6 +397,13 @@ const TAB_DATA: Record<TabKey, TabContent> = {
     lineValues: [88, 91, 86, 93, 90, 88, 94, 96],
     lineLabels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
     lineTitle: "Satisfaction Score",
+    tableHeaders: ["Segment", "Count", "Avg CLV", "Churn Risk", "Action"],
+    tableRows: [
+      ["Loyal", "9,269", "€4,120", "2.1%", "Reward"],
+      ["Active", "6,585", "€2,870", "8.4%", "Engage"],
+      ["At-Risk", "4,878", "€1,340", "34.2%", "Intervene"],
+    ],
+    tableTitle: "Segment Details",
   },
 };
 
@@ -461,6 +566,17 @@ function DashboardPreview({ theme }: { theme: QlikTheme }) {
             <LineChart values={data.lineValues} labels={data.lineLabels} color={theme.chartColors[2] ?? theme.primaryColor} />
           </div>
         )}
+
+        {/* Data table */}
+        <div style={panelStyle}>
+          <div
+            className="font-medium mb-2"
+            style={{ fontSize: theme.fontSize - 1, color: theme.textColor, opacity: 0.7 }}
+          >
+            {data.tableTitle}
+          </div>
+          <DataTable headers={data.tableHeaders} rows={data.tableRows} theme={theme} />
+        </div>
       </div>
     </div>
   );
@@ -472,6 +588,7 @@ export default function ThemeBuilder() {
   const [theme, setTheme] = useState<QlikTheme>(DEFAULT_THEME);
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [outputTab, setOutputTab] = useState<"json" | "css">("json");
 
   const update = useCallback((updates: Partial<QlikTheme>) => {
     setTheme((prev) => ({ ...prev, ...updates }));
@@ -485,28 +602,33 @@ export default function ThemeBuilder() {
     });
   }, []);
 
-  const exportJSON = useCallback(() => {
-    const json = JSON.stringify(themeToQlikJson(theme), null, 2);
-    const blob = new Blob([json], { type: "application/json" });
+  const triggerDownload = useCallback((blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${theme.id}.json`;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
-  }, [theme]);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, []);
+
+  const exportJSON = useCallback(() => {
+    const json = JSON.stringify(themeToQlikJson(theme), null, 2);
+    triggerDownload(new Blob([json], { type: "application/json" }), `${theme.id}.json`);
+  }, [theme, triggerDownload]);
 
   const exportZip = useCallback(async () => {
     setExporting(true);
     try {
-      const { default: JSZip } = await import("jszip");
       const zip = new JSZip();
       zip.file(`${theme.id}.json`, JSON.stringify(themeToQlikJson(theme), null, 2));
       zip.file(`${theme.id}.css`, themeToCSS(theme));
       zip.file("README.md", [
         `# ${theme.name}`,
         ``,
-        `Qlik Sense custom theme generated with [Qlik Sense Theme Builder](https://github.com/).`,
+        `Qlik Sense custom theme generated with Qlik Sense Theme Builder.`,
         ``,
         `## Installation`,
         ``,
@@ -536,24 +658,21 @@ export default function ThemeBuilder() {
         `| Border Radius | \`${theme.borderRadius}px\` |`,
       ].join("\n"));
       const blob = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${theme.id}.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
+      triggerDownload(blob, `${theme.id}.zip`);
     } finally {
       setExporting(false);
     }
-  }, [theme]);
+  }, [theme, triggerDownload]);
 
   const copyToClipboard = useCallback(async () => {
-    const json = JSON.stringify(themeToQlikJson(theme), null, 2);
+    const text = outputTab === "css"
+      ? themeToCSS(theme)
+      : JSON.stringify(themeToQlikJson(theme), null, 2);
     try {
-      await navigator.clipboard.writeText(json);
+      await navigator.clipboard.writeText(text);
     } catch {
       const textarea = document.createElement("textarea");
-      textarea.value = json;
+      textarea.value = text;
       textarea.style.cssText = "position:fixed;opacity:0";
       document.body.appendChild(textarea);
       textarea.select();
@@ -562,7 +681,7 @@ export default function ThemeBuilder() {
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [theme]);
+  }, [theme, outputTab]);
 
   const fontOptions = [
     "Arial, sans-serif",
@@ -771,13 +890,43 @@ export default function ThemeBuilder() {
 
             <section className="bg-white rounded-xl border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-gray-800 text-sm">Theme JSON</h2>
-                <button onClick={copyToClipboard} className="text-xs text-blue-600 hover:underline">
-                  {copied ? "Copied!" : "Copy"}
-                </button>
+                <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+                  <button
+                    onClick={() => setOutputTab("json")}
+                    className="px-3 py-1 text-xs font-medium rounded-md transition-colors"
+                    style={{
+                      backgroundColor: outputTab === "json" ? "#ffffff" : "transparent",
+                      color: outputTab === "json" ? "#1d4ed8" : "#6b7280",
+                      boxShadow: outputTab === "json" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    }}
+                  >
+                    JSON Config
+                  </button>
+                  <button
+                    onClick={() => setOutputTab("css")}
+                    className="px-3 py-1 text-xs font-medium rounded-md transition-colors"
+                    style={{
+                      backgroundColor: outputTab === "css" ? "#ffffff" : "transparent",
+                      color: outputTab === "css" ? "#1d4ed8" : "#6b7280",
+                      boxShadow: outputTab === "css" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    }}
+                  >
+                    CSS Overrides
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">
+                    {outputTab === "json" ? `${theme.id}.json` : `${theme.id}.css`}
+                  </span>
+                  <button onClick={copyToClipboard} className="text-xs text-blue-600 hover:underline font-medium">
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
               </div>
-              <pre className="text-xs bg-gray-50 rounded-lg p-3 overflow-auto max-h-72 font-mono text-gray-700 border border-gray-200">
-                {JSON.stringify(themeToQlikJson(theme), null, 2)}
+              <pre className="text-xs bg-gray-50 rounded-lg p-3 overflow-auto max-h-72 font-mono text-gray-700 border border-gray-200 leading-relaxed">
+                {outputTab === "json"
+                  ? JSON.stringify(themeToQlikJson(theme), null, 2)
+                  : themeToCSS(theme)}
               </pre>
             </section>
           </div>
