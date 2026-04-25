@@ -5,8 +5,5 @@ const nextConfig = {
   assetPrefix: '/build-qlik-sense-theme',
   trailingSlash: true,
   images: { unoptimized: true },
-  outputFileTracingExcludes: {
-    '*': ['**/*'],
-  },
 }
 module.exports = nextConfig

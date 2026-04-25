@@ -7,7 +7,7 @@ import ErrorScreen from "@/components/ErrorScreen";
 
 type AppState = "loading" | "ready" | "error" | "timeout";
 
-const LOAD_TIMEOUT_MS = 30_000;
+const LOAD_TIMEOUT_MS = 10_000;
 const MAX_RETRIES = 3;
 
 const log = {
