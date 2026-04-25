@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import JSZip from "jszip";
-import { DEFAULT_THEME, QlikTheme, themeToQlikJson, themeToCSS } from "@/types/theme";
+import { DEFAULT_THEME, QlikTheme, themeToQlikJson, themeToCSS, THEME_PRESETS } from "@/types/theme";
 
 // ── Controls ─────────────────────────────────────────
 
@@ -503,6 +503,38 @@ export default function ThemeBuilder() {
       const zip = new JSZip();
       zip.file(`${theme.id}.json`, JSON.stringify(themeToQlikJson(theme), null, 2));
       zip.file(`${theme.id}.css`, themeToCSS(theme));
+      zip.file("README.md", [
+        `# ${theme.name}`,
+        ``,
+        `Qlik Sense custom theme generated with [Qlik Sense Theme Builder](https://github.com/).`,
+        ``,
+        `## Installation`,
+        ``,
+        `1. Open the Qlik Management Console (QMC).`,
+        `2. Go to **Content Libraries** and upload \`${theme.id}.css\` to a public content library.`,
+        `3. Go to **Extensions**, click **Import** and upload \`${theme.id}.json\`.`,
+        `4. Open your Qlik Sense app, click the app options (**⋯**), select **Theme** and choose **${theme.name}**.`,
+        ``,
+        `## Files`,
+        ``,
+        `| File | Description |`,
+        `| ---- | ----------- |`,
+        `| \`${theme.id}.json\` | Qlik Sense theme definition (upload via QMC Extensions) |`,
+        `| \`${theme.id}.css\` | CSS overrides with CSS variables (upload via Content Library) |`,
+        ``,
+        `## Theme Properties`,
+        ``,
+        `| Property | Value |`,
+        `| -------- | ----- |`,
+        `| Primary Color | \`${theme.primaryColor}\` |`,
+        `| Background | \`${theme.backgroundColor}\` |`,
+        `| Panel Color | \`${theme.panelColor}\` |`,
+        `| Header Color | \`${theme.headerColor}\` |`,
+        `| Text Color | \`${theme.textColor}\` |`,
+        `| Font Family | \`${theme.fontFamily}\` |`,
+        `| Font Size | \`${theme.fontSize}px\` |`,
+        `| Border Radius | \`${theme.borderRadius}px\` |`,
+      ].join("\n"));
       const blob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -603,6 +635,29 @@ export default function ThemeBuilder() {
         <div className="flex gap-6 items-start">
           {/* Controls panel */}
           <div className="w-80 flex-shrink-0 flex flex-col gap-4">
+            {/* Presets */}
+            <section className="bg-white rounded-xl border border-gray-200 p-4">
+              <h2 className="font-semibold text-gray-800 text-sm mb-3">Presets</h2>
+              <div className="grid grid-cols-5 gap-2">
+                {THEME_PRESETS.map((preset) => (
+                  <button
+                    key={preset.key}
+                    onClick={() => setTheme(preset.theme)}
+                    title={preset.label}
+                    className="flex flex-col items-center gap-1.5 group"
+                  >
+                    <div
+                      className="w-full aspect-square rounded-lg border-2 border-transparent group-hover:border-blue-400 transition-colors"
+                      style={{ backgroundColor: preset.swatch }}
+                    />
+                    <span className="text-xs text-gray-500 group-hover:text-gray-800 transition-colors truncate w-full text-center">
+                      {preset.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
             {/* Theme identity */}
             <section className="bg-white rounded-xl border border-gray-200 p-4">
               <h2 className="font-semibold text-gray-800 text-sm mb-3">Theme Identity</h2>
@@ -697,6 +752,7 @@ export default function ThemeBuilder() {
               <ul className="list-disc list-inside space-y-0.5 opacity-80">
                 <li><code className="font-mono">{theme.id}.json</code> — Qlik Sense theme config</li>
                 <li><code className="font-mono">{theme.id}.css</code> — Ready-to-use CSS overrides</li>
+                <li><code className="font-mono">README.md</code> — Installation instructions</li>
               </ul>
             </section>
           </div>

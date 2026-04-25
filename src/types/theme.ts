@@ -34,6 +34,110 @@ export const DEFAULT_THEME: QlikTheme = {
   chartColors: ["#0066CC", "#FF6B35", "#28A745", "#DC3545", "#FFC107", "#17A2B8"],
 };
 
+export interface ThemePreset {
+  key: string;
+  label: string;
+  swatch: string;
+  theme: QlikTheme;
+}
+
+export const THEME_PRESETS: ThemePreset[] = [
+  {
+    key: "corporate",
+    label: "Corporate",
+    swatch: "#003366",
+    theme: { ...DEFAULT_THEME },
+  },
+  {
+    key: "dark",
+    label: "Dark",
+    swatch: "#1E1E2E",
+    theme: {
+      id: "dark-theme",
+      name: "Dark Theme",
+      primaryColor: "#7C3AED",
+      backgroundColor: "#0F0F1A",
+      panelColor: "#1E1E2E",
+      headerColor: "#7C3AED",
+      textColor: "#E2E8F0",
+      accentColor: "#F472B6",
+      borderColor: "#334155",
+      fontFamily: "Inter, sans-serif",
+      fontSize: 13,
+      headerFontSize: 16,
+      borderRadius: 8,
+      padding: 16,
+      chartColors: ["#7C3AED", "#F472B6", "#34D399", "#FBBF24", "#60A5FA", "#F87171"],
+    },
+  },
+  {
+    key: "emerald",
+    label: "Emerald",
+    swatch: "#059669",
+    theme: {
+      id: "emerald-theme",
+      name: "Emerald Theme",
+      primaryColor: "#059669",
+      backgroundColor: "#F0FDF4",
+      panelColor: "#FFFFFF",
+      headerColor: "#065F46",
+      textColor: "#1C1C1C",
+      accentColor: "#F59E0B",
+      borderColor: "#D1FAE5",
+      fontFamily: "Arial, sans-serif",
+      fontSize: 13,
+      headerFontSize: 16,
+      borderRadius: 10,
+      padding: 16,
+      chartColors: ["#059669", "#F59E0B", "#3B82F6", "#EF4444", "#8B5CF6", "#06B6D4"],
+    },
+  },
+  {
+    key: "sunset",
+    label: "Sunset",
+    swatch: "#DC2626",
+    theme: {
+      id: "sunset-theme",
+      name: "Sunset Theme",
+      primaryColor: "#DC2626",
+      backgroundColor: "#FFF7ED",
+      panelColor: "#FFFFFF",
+      headerColor: "#9A3412",
+      textColor: "#1C1917",
+      accentColor: "#D97706",
+      borderColor: "#FED7AA",
+      fontFamily: "Georgia, serif",
+      fontSize: 13,
+      headerFontSize: 16,
+      borderRadius: 4,
+      padding: 14,
+      chartColors: ["#DC2626", "#D97706", "#65A30D", "#0891B2", "#7C3AED", "#DB2777"],
+    },
+  },
+  {
+    key: "minimal",
+    label: "Minimal",
+    swatch: "#18181B",
+    theme: {
+      id: "minimal-theme",
+      name: "Minimal Theme",
+      primaryColor: "#18181B",
+      backgroundColor: "#FAFAFA",
+      panelColor: "#FFFFFF",
+      headerColor: "#27272A",
+      textColor: "#18181B",
+      accentColor: "#3B82F6",
+      borderColor: "#E4E4E7",
+      fontFamily: "Inter, sans-serif",
+      fontSize: 12,
+      headerFontSize: 14,
+      borderRadius: 2,
+      padding: 12,
+      chartColors: ["#18181B", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"],
+    },
+  },
+];
+
 export function themeToQlikJson(theme: QlikTheme): Record<string, unknown> {
   return {
     id: theme.id,
